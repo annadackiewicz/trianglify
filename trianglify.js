@@ -22,10 +22,7 @@ function Trianglify(options) {
 
     this.options.y_gradient = options.y_gradient || this.options.x_gradient.map(function(c){return d3.rgb(c).brighter(0.5);});
     
-    this.saved = d3.select(document.createElementNS("http://www.w3.org/2000/svg", "svg"));
     this.step = -1;
-    console.log(this.step);
-    console.log("Myszka!!!");
 }
 
 //nodejs stuff
@@ -38,6 +35,36 @@ if (typeof module !== 'undefined' && module.exports) {
     module.exports = Trianglify;
 }
 
+Trianglify.prototype.getColor = function() {
+    console.log('getColor');
+    console.log(this.step);
+    if (this.step < 0 || this.step == undefined) {
+        this.nextColors = this.randomColor();
+        this.thisColors = this.randomColor();
+        return this.thisColors;
+    } else if (this.step == 100) {
+        this.thisColors = this.nextColors;
+        this.nextColors = this.randomColor();
+        console.log('XYZ');
+        return this.thisColors;
+    } else {
+        // TODO: add interpolation between those colors...
+        //if (length(this.thisColors)
+        console.log(this.thisColors);
+        console.log(this.nextColors);
+        return undefined;
+    }
+};
+
+Trianglify.prototype.randomColor = function() {
+    console.log('Rrrr');
+    var keys = Object.keys(Trianglify.colorbrewer);
+    var palette = Trianglify.colorbrewer[keys[Math.floor(Math.random()*keys.length)]];
+    keys = Object.keys(palette);
+    var colors = palette[keys[Math.floor(Math.random()*keys.length)]];
+    return colors;
+};
+
 Trianglify.randomColor = function() {
     var keys = Object.keys(Trianglify.colorbrewer);
     var palette = Trianglify.colorbrewer[keys[Math.floor(Math.random()*keys.length)]];
@@ -47,8 +74,12 @@ Trianglify.randomColor = function() {
 };
 
 Trianglify.prototype.generate = function(width, height) {
-    console.log("generate " + this.step);
-    var new_pattern = new Trianglify.Pattern(this.options, width, height, this.step, this.from, this.to);
+    this.options.x_gradient = this.getColor();
+    if (this.options.x_gradient != undefined) {
+        console.log('defined');
+        this.options.y_gradient = this.options.x_gradient.map(function(c){return d3.rgb(c).brighter(0.5);});
+    }
+    var new_pattern = new Trianglify.Pattern(this.options, width, height, this.step, this.from, this.to, this.thisColors, this.nextColors);
     this.step += 1;
     if (this.step > 100) {
         this.step = 0;
@@ -62,15 +93,19 @@ Trianglify.prototype.save_state = function(from, to) {
     this.to = to;
 }
 
-Trianglify.Pattern = function(options, width, height, step, from, to) {
+Trianglify.Pattern = function(options, width, height, step, from, to, from_color, to_color) {
     this.from = from;
     this.to = to;
+    this.thisColors = from_color;
+    this.nextColors = to_color;
+    console.log('New Pattern');
+    console.log(this.thisColors);
+    console.log(this.nextColors);
     this.step = step;
     this.options = options;
     this.width = width;
     this.height = height;
     this.polys = this.generateNextPolygons();
-    //console.log('Ania');
     this.svg = this.generateNextSVG();
     //console.log(this.svg);
     var s = new XMLSerializer();
@@ -78,15 +113,48 @@ Trianglify.Pattern = function(options, width, height, step, from, to) {
     this.base64 = btoa(this.svgString);
     this.dataUri = 'data:image/svg+xml;base64,' + this.base64;
     this.dataUrl = 'url('+this.dataUri+')';
-    //console.log(this.svgString);
+    console.log(this.thisColors);
+    console.log(this.nextColors);
 };
 
 Trianglify.Pattern.prototype.append = function() {
     document.body.appendChild(this.svg);
 };
 
-Trianglify.Pattern.gradient_2d = function (x_gradient, y_gradient, width, height) {
-
+Trianglify.Pattern.gradient_2d = function (x_gradient, y_gradient, width, height, thisColors1, nextColors1) {
+    console.log("gradient " + x_gradient);
+    console.log(thisColors1);
+    console.log(nextColors1);
+    var thisColors = thisColors1;
+    var nextColors = nextColors1;
+    if (x_gradient == undefined) {
+        return function(x, y) {        
+            console.log(thisColors);
+            var color_x = d3.scale.linear()
+                .range(thisColors)
+                .domain(d3.range(0, width, width/thisColors.length)); //[-bleed, width+bleed]
+            y_gradient = thisColors.map(function(c){return d3.rgb(c).brighter(0.5);});
+            var color_y = d3.scale.linear()
+                .range(y_gradient)
+                .domain(d3.range(0, height, height/y_gradient.length)); //[-bleed, width+bleed]
+                
+            console.log(nextColors);
+            var color_x_next = d3.scale.linear()
+                .range(nextColors)
+                .domain(d3.range(0, width, width/nextColors.length)); //[-bleed, width+bleed]
+            y_gradient_next = nextColors.map(function(c){return d3.rgb(c).brighter(0.5);});
+            var color_y_next = d3.scale.linear()
+                .range(y_gradient_next)
+                .domain(d3.range(0, height, height/y_gradient_next.length)); //[-bleed, width+bleed]
+                
+            console.log('-');
+            console.log(d3.interpolateRgb(color_x(x), color_y(y))(0.5));
+            console.log(d3.interpolateRgb(color_x_next(x), color_y_next(y))(0.5));
+            console.log(d3.interpolateRgb(d3.interpolateRgb(color_x(x), color_y(y))(0.5), d3.interpolateRgb(color_x_next(x), color_y_next(y))(0.5))(0.5));
+            console.log('#');
+            return d3.interpolateRgb(d3.interpolateRgb(color_x(x), color_y(y))(0.5), d3.interpolateRgb(color_x_next(x), color_y_next(y))(0.5))(0.5);
+        };
+    }
     return function(x, y) {
         var color_x = d3.scale.linear()
             .range(x_gradient)
@@ -94,8 +162,13 @@ Trianglify.Pattern.gradient_2d = function (x_gradient, y_gradient, width, height
         var color_y = d3.scale.linear()
             .range(y_gradient)
             .domain(d3.range(0, height, height/y_gradient.length)); //[-bleed, width+bleed]
+        console.log(d3.interpolateRgb(color_x(x), color_y(y))(0.5));
         return d3.interpolateRgb(color_x(x), color_y(y))(0.5);
     };
+};
+
+Trianglify.Pattern.interpolate_colours = function (x_gradient, y_gradient, width, height) {
+    
 };
 
 Trianglify.Pattern.prototype.generateNextPolygons = function() {
@@ -157,7 +230,10 @@ Trianglify.Pattern.prototype.generatePolygons = function () {
 
 Trianglify.Pattern.prototype.generateSVG = function () {
     var options = this.options;
-    var color = Trianglify.Pattern.gradient_2d(options.x_gradient, options.y_gradient, this.width, this.height);
+    console.log('Generate SVG');
+    console.log(this.thisColors);
+    console.log(this.nextColors);
+    var color = Trianglify.Pattern.gradient_2d(options.x_gradient, options.y_gradient, this.width, this.height, this.thisColors, this.nextColors);
 
     var elem = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     var svg = d3.select(elem);
@@ -179,10 +255,22 @@ Trianglify.Pattern.prototype.generateSVG = function () {
 Trianglify.Pattern.prototype.generateNextSVG = function () {
     var options = this.options;
     
+    console.log('Generate next SVG');
+    console.log(this.thisColors);
+    console.log(this.nextColors);
     //console.log(this.step);
     if (this.step >= 0 && this.step < 100) {
+        console.log('generate extra');
+        if (this.nextColors == undefined) {
+            throw "UND"
+        }        
+        var color = Trianglify.Pattern.gradient_2d(options.x_gradient, options.y_gradient, this.width, this.height, this.thisColors, this.nextColors);
         
-        var color = Trianglify.Pattern.gradient_2d(options.x_gradient, options.y_gradient, this.width, this.height);
+        if (color == undefined) {
+            throw "Whaaaa";
+        }
+        
+
 
         var elem = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         var svg = d3.select(elem);
