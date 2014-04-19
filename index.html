@@ -109,6 +109,7 @@
             <div class="box">
                 <p>Trianglify is a javascript library for generating colorful triangle meshes that can be used as SVG images and CSS backgrounds.</p>
                 <p>Trianglify is open source software. Check it out on <a href="https://github.com/qrohlf/trianglify">Github</a>!</p>
+                <p>This is a version that moves!!! Check it out on <a href="https://github.com/annadackiewicz/trianglify/tree/make_it_move">Github</a>!</p>
                 <p>Made by <a href="http://qrohlf.com/">Quinn Rohlf</a></p>
                 <p>
                     <a href="#" id="button" class="btn box">Click for a new pattern</a>
@@ -117,11 +118,11 @@
                 </p>
                 <div id="controls" class="hidden">
                     <ul>
-                        <li>Noise: <a href="#" id="subtractnoise" class="btn box small">-</a><span id="noise">0</span><a href="#" id="addnoise" class="btn box small">+</a></li>
+                        <!--<li>Noise: <a href="#" id="subtractnoise" class="btn box small">-</a><span id="noise">0</span><a href="#" id="addnoise" class="btn box small">+</a></li>-->
                         <li>Cellsize: <a href="#" id="subtractcellsize" class="btn box small">-</a><span id="cellsize">0</span><a href="#" id="addcellsize" class="btn box small">+</a></li>
                         <li>Cellpadding: <a href="#" id="subtractcellpadding" class="btn box small">-</a><span id="cellpadding">0</span><a href="#" id="addcellpadding" class="btn box small" title="cellpadding must be smaller than cellsize/2">+</a></li>
                     </ul>
-                    <p>Note: noise effect will cause rendering to take longer</p>
+                    <!--<p>Note: noise effect will cause rendering to take longer</p>-->
                 </div>
                 <p>
                     <a href="#" id="togglecontrols" class="btn box small">show controls</a>
@@ -138,9 +139,9 @@
         var t = new Trianglify({noiseIntensity: 0});
         var button = document.getElementById('button'),
             saveas = document.getElementById('saveas'),
-            subtractnoise = document.getElementById('subtractnoise'),
-            addnoise = document.getElementById('addnoise'),
-            noise_display = document.getElementById('noise'),
+            //subtractnoise = document.getElementById('subtractnoise'),
+            //addnoise = document.getElementById('addnoise'),
+            //noise_display = document.getElementById('noise'),
             subtractcellsize = document.getElementById('subtractcellsize'),
             addcellsize = document.getElementById('addcellsize'),
             cellsize_display = document.getElementById('cellsize'),
@@ -156,14 +157,14 @@
             redraw();
             return false;
         };
-        addnoise.onclick = function() {
+        /*addnoise.onclick = function() {
             noise(0.2);
             return false;
         };
         subtractnoise.onclick = function() {
             noise(-0.2);
             return false;
-        };
+        };*/
         addcellsize.onclick = function() {
             cellsize(10);
             return false;
@@ -205,7 +206,7 @@
             var pattern = t.generate(document.body.clientWidth, height());
             document.body.setAttribute('style', 'background-image: '+pattern.dataUrl);
             saveas.setAttribute('href', pattern.dataUri);
-            noise_display.innerHTML = t.options.noiseIntensity.toFixed(1);
+            //noise_display.innerHTML = t.options.noiseIntensity.toFixed(1);
             cellsize_display.innerHTML = t.options.cellsize.toFixed(0);
             cellpadding_display.innerHTML = t.options.cellpadding.toFixed(0);
         };

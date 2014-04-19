@@ -3,6 +3,9 @@
 //
 // JSHint stuff:
 /* global module, require, jsdom:true, d3:true, document:true, XMLSerializer:true, btoa:true*/
+
+var NUM_STEPS = 10
+
 function Trianglify(options) {
     if (typeof options === 'undefined') {
         options = {};
@@ -42,7 +45,7 @@ Trianglify.prototype.getColor = function() {
         this.nextColors = this.randomColor();
         this.thisColors = this.randomColor();
         return this.thisColors;
-    } else if (this.step == 100) {
+    } else if (this.step == NUM_STEPS) {
         this.thisColors = this.nextColors;
         this.nextColors = this.randomColor();
         console.log('XYZ');
@@ -79,28 +82,28 @@ Trianglify.prototype.generate = function(width, height) {
         console.log('defined');
         this.options.y_gradient = this.options.x_gradient.map(function(c){return d3.rgb(c).brighter(0.5);});
     }
-    var new_pattern = new Trianglify.Pattern(this.options, width, height, this.step, this.from, this.to, this.thisColors, this.nextColors);
+    var new_pattern = new Trianglify.Pattern(this.options, width, height, this.step, this.from, this.to, this.thisColors, this.nextColors, this.saved);
     this.step += 1;
-    if (this.step > 100) {
+    if (this.step > NUM_STEPS) {
         this.step = 0;
     }
-    this.save_state(new_pattern.from, new_pattern.to);
+    this.save_state(new_pattern.from, new_pattern.to, new_pattern.saved);
     return new_pattern;
 };
 
-Trianglify.prototype.save_state = function(from, to) {
+Trianglify.prototype.save_state = function(from, to, saved) {
     this.from = from;
     this.to = to;
+    this.saved = saved;
 }
 
-Trianglify.Pattern = function(options, width, height, step, from, to, from_color, to_color) {
+Trianglify.Pattern = function(options, width, height, step, from, to, from_color, to_color, saved) {
+    this.saved = saved;
     this.from = from;
     this.to = to;
     this.thisColors = from_color;
     this.nextColors = to_color;
     console.log('New Pattern');
-    console.log(this.thisColors);
-    console.log(this.nextColors);
     this.step = step;
     this.options = options;
     this.width = width;
@@ -113,23 +116,21 @@ Trianglify.Pattern = function(options, width, height, step, from, to, from_color
     this.base64 = btoa(this.svgString);
     this.dataUri = 'data:image/svg+xml;base64,' + this.base64;
     this.dataUrl = 'url('+this.dataUri+')';
-    console.log(this.thisColors);
-    console.log(this.nextColors);
 };
 
 Trianglify.Pattern.prototype.append = function() {
     document.body.appendChild(this.svg);
 };
 
-Trianglify.Pattern.gradient_2d = function (x_gradient, y_gradient, width, height, thisColors1, nextColors1) {
+Trianglify.Pattern.gradient_2d = function (x_gradient, y_gradient, width, height, thisColors1, nextColors1, step1) {
     console.log("gradient " + x_gradient);
     console.log(thisColors1);
     console.log(nextColors1);
     var thisColors = thisColors1;
     var nextColors = nextColors1;
+    var step = step1;
     if (x_gradient == undefined) {
-        return function(x, y) {        
-            console.log(thisColors);
+        return function(x, y) {
             var color_x = d3.scale.linear()
                 .range(thisColors)
                 .domain(d3.range(0, width, width/thisColors.length)); //[-bleed, width+bleed]
@@ -138,7 +139,6 @@ Trianglify.Pattern.gradient_2d = function (x_gradient, y_gradient, width, height
                 .range(y_gradient)
                 .domain(d3.range(0, height, height/y_gradient.length)); //[-bleed, width+bleed]
                 
-            console.log(nextColors);
             var color_x_next = d3.scale.linear()
                 .range(nextColors)
                 .domain(d3.range(0, width, width/nextColors.length)); //[-bleed, width+bleed]
@@ -146,13 +146,8 @@ Trianglify.Pattern.gradient_2d = function (x_gradient, y_gradient, width, height
             var color_y_next = d3.scale.linear()
                 .range(y_gradient_next)
                 .domain(d3.range(0, height, height/y_gradient_next.length)); //[-bleed, width+bleed]
-                
-            console.log('-');
-            console.log(d3.interpolateRgb(color_x(x), color_y(y))(0.5));
-            console.log(d3.interpolateRgb(color_x_next(x), color_y_next(y))(0.5));
-            console.log(d3.interpolateRgb(d3.interpolateRgb(color_x(x), color_y(y))(0.5), d3.interpolateRgb(color_x_next(x), color_y_next(y))(0.5))(0.5));
-            console.log('#');
-            return d3.interpolateRgb(d3.interpolateRgb(color_x(x), color_y(y))(0.5), d3.interpolateRgb(color_x_next(x), color_y_next(y))(0.5))(0.5);
+
+            return d3.interpolateRgb(d3.interpolateRgb(color_x(x), color_y(y))(0.5), d3.interpolateRgb(color_x_next(x), color_y_next(y))(0.5))((step + 1) / (NUM_STEPS+1));
         };
     }
     return function(x, y) {
@@ -162,7 +157,7 @@ Trianglify.Pattern.gradient_2d = function (x_gradient, y_gradient, width, height
         var color_y = d3.scale.linear()
             .range(y_gradient)
             .domain(d3.range(0, height, height/y_gradient.length)); //[-bleed, width+bleed]
-        console.log(d3.interpolateRgb(color_x(x), color_y(y))(0.5));
+        //console.log(d3.interpolateRgb(color_x(x), color_y(y))(0.5));
         return d3.interpolateRgb(color_x(x), color_y(y))(0.5);
     };
 };
@@ -174,15 +169,18 @@ Trianglify.Pattern.interpolate_colours = function (x_gradient, y_gradient, width
 Trianglify.Pattern.prototype.generateNextPolygons = function() {
     var step = this.step;
     if (step < 0 || step == undefined) {
+        console.log('ONE');
         this.to = this.generatePolygons();
         this.from = this.generatePolygons();
         this.step = -1;
         return d3.geom.delaunay(this.from);
-    } else if (step == 100) {
+    } else if (step == NUM_STEPS) {
+        console.log('TWO');
         this.from = this.to;
         this.to = this.generatePolygons();
         return d3.geom.delaunay(this.from);
     } else {
+        console.log('THREE');
         return d3.geom.delaunay(this.getNextStepPolygons());
     }
 };
@@ -201,8 +199,8 @@ Trianglify.Pattern.prototype.getNextStepPolygons = function() {
     var vertices = d3.range(cellsX*cellsY).map(function(d) {
         var col = d % cellsX;
         var row = Math.floor(d / cellsX);
-        var x = from[d][0] + (step + 1) * (to[d][0] - from[d][0]) / 100 ;
-        var y = from[d][1] + (step + 1) * (to[d][1] - from[d][1]) / 100 ;
+        var x = from[d][0] + (step + 1) * (to[d][0] - from[d][0]) / (NUM_STEPS + 1) ;
+        var y = from[d][1] + (step + 1) * (to[d][1] - from[d][1]) / (NUM_STEPS + 1) ;
         return [x, y];
     });
     return vertices;
@@ -233,7 +231,7 @@ Trianglify.Pattern.prototype.generateSVG = function () {
     console.log('Generate SVG');
     console.log(this.thisColors);
     console.log(this.nextColors);
-    var color = Trianglify.Pattern.gradient_2d(options.x_gradient, options.y_gradient, this.width, this.height, this.thisColors, this.nextColors);
+    var color = Trianglify.Pattern.gradient_2d(options.x_gradient, options.y_gradient, this.width, this.height, this.thisColors, this.nextColors, this.step);
 
     var elem = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     var svg = d3.select(elem);
@@ -259,19 +257,17 @@ Trianglify.Pattern.prototype.generateNextSVG = function () {
     console.log(this.thisColors);
     console.log(this.nextColors);
     //console.log(this.step);
-    if (this.step >= 0 && this.step < 100) {
+    if (this.step >= 0 && this.step < NUM_STEPS) {
         console.log('generate extra');
         if (this.nextColors == undefined) {
             throw "UND"
         }        
-        var color = Trianglify.Pattern.gradient_2d(options.x_gradient, options.y_gradient, this.width, this.height, this.thisColors, this.nextColors);
+        var color = Trianglify.Pattern.gradient_2d(options.x_gradient, options.y_gradient, this.width, this.height, this.thisColors, this.nextColors, this.step);
         
         if (color == undefined) {
             throw "Whaaaa";
         }
         
-
-
         var elem = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         var svg = d3.select(elem);
 
@@ -293,11 +289,14 @@ Trianglify.Pattern.prototype.generateNextSVG = function () {
         this.saved = this.generateSVG();
         return this.saved;
     } else {
-        //console.log('Aha!');
+        console.log('Aha!');
         this.step = 0;
-        var ret = this.saved;
+        //var ret = this.saved;
         this.saved = this.generateSVG();
-        return ret;
+        //if (ret == undefined) {
+        //    throw "Saved is undefined!!!"
+        //}
+        return this.saved;
     }
 };
 
