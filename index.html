@@ -112,7 +112,7 @@
                 <p>This is a version that moves!!! Check it out on <a href="https://github.com/annadackiewicz/trianglify/tree/make_it_move">Github</a>!</p>
                 <p>Made by <a href="http://qrohlf.com/">Quinn Rohlf</a></p>
                 <p>
-                    <a href="#" id="button" class="btn box">Click for a new pattern</a>
+                    <a href="#" id="button" class="btn box">Start / speed up</a>
                     <a href="#" id="saveas" target="_blank" class="download btn box" title="right click > save as svg" download="trianglify-background.svg">SVG</a>
                     <!-- <a href="https://cloudconvert.org/svg-to-png" target="_blank" class="download btn box">PNG</a> -->
                 </p>
@@ -154,7 +154,10 @@
 
         button.onclick = function() {
             recolor();
-            redraw();
+            
+            setInterval(function(){redraw()},300);
+
+            //redraw();
             return false;
         };
         /*addnoise.onclick = function() {
@@ -188,14 +191,14 @@
         };
 
         window.onresize = function() {
-            redraw();
+            //redraw();
         };
 
         function heightChange() {
             if (height() != prevheight) {
                 console.log("height changed from "+prevheight+" to "+height());
                 prevheight = height();
-                redraw();
+                //redraw();
             };
         }
 
@@ -220,10 +223,10 @@
             i += t.options.noiseIntensity;
             if (i >= 0 && i <= 1) {
                 t.options.noiseIntensity = i;
-                redraw();
+                //redraw();
             } else if (i < 0) { 
                 t.options.noiseIntensity = 0;
-                redraw();
+                //redraw();
             }
         }
 
@@ -235,7 +238,7 @@
                 if (t.options.cellpadding >= t.options.cellsize/2) {
                     t.options.cellpadding = 5*Math.floor((t.options.cellsize/2 - 1)/5);
                 }
-                redraw();
+                //redraw();
             }
         }
 
@@ -243,7 +246,7 @@
             i += t.options.cellpadding;
             if (i >= 0  && i < t.options.cellsize/2) {
                 t.options.cellpadding = i;
-                redraw();
+                //redraw();
             }
         }
 
