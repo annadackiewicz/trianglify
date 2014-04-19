@@ -106,31 +106,33 @@
 
     <body>
         <div class="container">
-            <div class="box">
-                <p>Trianglify is a javascript library for generating colorful triangle meshes that can be used as SVG images and CSS backgrounds.</p>
-                <p>Trianglify is open source software. Check it out on <a href="https://github.com/qrohlf/trianglify">Github</a>!</p>
-                <p>This is a version that moves!!! Check it out on <a href="https://github.com/annadackiewicz/trianglify/tree/make_it_move">Github</a>!</p>
-                <p>Made by <a href="http://qrohlf.com/">Quinn Rohlf</a></p>
-                <p>
-                    <a href="#" id="button" class="btn box">Start / speed up</a>
-                    <a href="#" id="saveas" target="_blank" class="download btn box" title="right click > save as svg" download="trianglify-background.svg">SVG</a>
-                    <!-- <a href="https://cloudconvert.org/svg-to-png" target="_blank" class="download btn box">PNG</a> -->
-                </p>
-                <div id="controls" class="hidden">
-                    <ul>
-                        <!--<li>Noise: <a href="#" id="subtractnoise" class="btn box small">-</a><span id="noise">0</span><a href="#" id="addnoise" class="btn box small">+</a></li>-->
-                        <li>Cellsize: <a href="#" id="subtractcellsize" class="btn box small">-</a><span id="cellsize">0</span><a href="#" id="addcellsize" class="btn box small">+</a></li>
-                        <li>Cellpadding: <a href="#" id="subtractcellpadding" class="btn box small">-</a><span id="cellpadding">0</span><a href="#" id="addcellpadding" class="btn box small" title="cellpadding must be smaller than cellsize/2">+</a></li>
-                    </ul>
-                    <!--<p>Note: noise effect will cause rendering to take longer</p>-->
-                </div>
-                <p>
-                    <a href="#" id="togglecontrols" class="btn box small">show controls</a>
-                </p>
-                <footer>
+            <div class="box" id="bigbox" class="hidden">
+                <a href="#" id="toggleinfo" class="btn box small">show info</a>
+                <a href="#" id="button" class="btn box small">start / speed up</a>
+                <div id="infobox" class="hidden">
+                    <p>Trianglify is a javascript library for generating colorful triangle meshes that can be used as SVG images and CSS backgrounds.</p>
+                    <p>Trianglify is open source software. Check it out on <a href="https://github.com/qrohlf/trianglify">Github</a>!</p>
+                    <p>Made by <a href="http://qrohlf.com/">Quinn Rohlf</a>
+                    <div width="60"><a href="https://twitter.com/qrohlf" class="twitter-follow-button" data-width="60px" data-show-count="false"></a></div>
                     <iframe src="http://ghbtns.com/github-btn.html?user=qrohlf&amp;repo=trianglify&amp;type=watch&amp;count=true&amp;size=large" allowtransparency="true" frameborder="0" scrolling="0" width="150" height="30"></iframe>
-                    <a href="https://twitter.com/qrohlf" class="twitter-follow-button" data-show-count="false" data-size="large">Follow @qrohlf</a>
-                </footer>
+                    </p>
+                    <br>
+                    <p>This is a version that moves!!! Check it out on <a href="https://github.com/annadackiewicz/trianglify/tree/make_it_move">Github</a>!</p>
+                    <p>Hacked on by <a href="http://annadackiewicz.github.io/trianglify/">Anna Dackiewicz</a>
+                    <div width="60"><a href="https://twitter.com/annadackiewicz" class="twitter-follow-button" data-width="60px" data-show-count="false"></a></div>
+                    </p>                
+
+                    <div id="controls" class="hidden">
+                        <ul>
+                            <li>Cellsize: <a href="#" id="subtractcellsize" class="btn box small">-</a><span id="cellsize">0</span><a href="#" id="addcellsize" class="btn box small">+</a></li>
+                            <li>Cellpadding: <a href="#" id="subtractcellpadding" class="btn box small">-</a><span id="cellpadding">0</span><a href="#" id="addcellpadding" class="btn box small" title="cellpadding must be smaller than cellsize/2">+</a></li>
+                        </ul>
+                        <!--<p>Note: noise effect will cause rendering to take longer</p>-->
+                    </div>
+                    <p>
+                        <a href="#" id="togglecontrols" class="btn box small">show controls</a>
+                    </p>
+                </div>
             </div>
         </div>
         <script src="http://d3js.org/d3.v3.min.js"></script>
@@ -149,7 +151,9 @@
             addcellpadding = document.getElementById('addcellpadding'),
             cellpadding_display = document.getElementById('cellpadding'),
             toggle_controls = document.getElementById('togglecontrols'),
+            toggle_info = document.getElementById('toggleinfo'),
             controls = document.getElementById('controls'),
+            info_box = document.getElementById('infobox'),
             prevheight = height();
 
         button.onclick = function() {
@@ -187,6 +191,12 @@
         toggle_controls.onclick = function() {
             toggle_controls.innerHTML = toggleClass(controls, "hidden") ? "show controls":"hide controls";
             window.setTimeout(heightChange, 0); //see if the height changed after render and redraw if it did
+            return false;
+        };
+
+        toggle_info.onclick = function() {
+            toggle_info.innerHTML = toggleClass(info_box, "hidden") ? "show info":"hide info";
+            window.setTimeout(heightChange, 0);
             return false;
         };
 
