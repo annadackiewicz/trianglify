@@ -191,14 +191,16 @@
         };
 
         window.onresize = function() {
-            //redraw();
+            t = new Trianglify({noiseIntensity: 0});
+            redraw();
         };
 
         function heightChange() {
             if (height() != prevheight) {
                 console.log("height changed from "+prevheight+" to "+height());
                 prevheight = height();
-                //redraw();
+                t = new Trianglify({noiseIntensity: 0});
+                redraw();
             };
         }
 
@@ -238,7 +240,8 @@
                 if (t.options.cellpadding >= t.options.cellsize/2) {
                     t.options.cellpadding = 5*Math.floor((t.options.cellsize/2 - 1)/5);
                 }
-                //redraw();
+                t = new Trianglify({noiseIntensity: 0});
+                redraw();
             }
         }
 
@@ -246,7 +249,8 @@
             i += t.options.cellpadding;
             if (i >= 0  && i < t.options.cellsize/2) {
                 t.options.cellpadding = i;
-                //redraw();
+                t = new Trianglify({noiseIntensity: 0});
+                redraw();
             }
         }
 
@@ -256,7 +260,7 @@
                 document.body.offsetHeight, document.documentElement.offsetHeight,
                 document.body.clientHeight, document.documentElement.clientHeight
             );
-        }
+        }   
 
         function toggleClass(el, className) {
             if (el.classList) {

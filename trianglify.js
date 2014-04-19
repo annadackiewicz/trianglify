@@ -109,7 +109,13 @@ Trianglify.Pattern = function(options, width, height, step, from, to, from_color
     this.width = width;
     this.height = height;
     this.polys = this.generateNextPolygons();
-    this.svg = this.generateNextSVG();
+    if (this.polys != undefined) {
+        this.svg = this.generateNextSVG();
+    } else {
+        this.step = -1;
+        this.polys = this.generateNextPolygons();
+        this.svg = this.generateNextSVG();
+    }
     //console.log(this.svg);
     var s = new XMLSerializer();
     this.svgString = s.serializeToString(this.svg);
@@ -181,7 +187,11 @@ Trianglify.Pattern.prototype.generateNextPolygons = function() {
         return d3.geom.delaunay(this.from);
     } else {
         console.log('THREE');
-        return d3.geom.delaunay(this.getNextStepPolygons());
+        var polygons = this.getNextStepPolygons();
+        if (polygons == undefined) {
+            return undefined;
+        }
+        return d3.geom.delaunay(polygons);
     }
 };
 
@@ -194,11 +204,37 @@ Trianglify.Pattern.prototype.getNextStepPolygons = function() {
     var from = this.from;
     var to = this.to;
 
+    if (from == undefined || to == undefined) {
+        return undefined;
+    }
+
     var step = this.step;
+    if (step == undefined) {
+        step = 1;
+    }
     
     var vertices = d3.range(cellsX*cellsY).map(function(d) {
         var col = d % cellsX;
         var row = Math.floor(d / cellsX);
+        if (from == undefined) {
+            console.log('from');
+        }
+        if (to == undefined) {
+            console.log('to');
+        }
+        if (step == undefined) {
+            console.log('step');
+        }
+        if (from[d] == undefined) {
+            console.log('from[d]');
+            console.log(from);
+            throw 'from';
+        }
+        if (to[d] == undefined) {
+            console.log('to[d]');
+            console.log(to);
+            throw 'to';
+        }
         var x = from[d][0] + (step + 1) * (to[d][0] - from[d][0]) / (NUM_STEPS + 1) ;
         var y = from[d][1] + (step + 1) * (to[d][1] - from[d][1]) / (NUM_STEPS + 1) ;
         return [x, y];
